@@ -161,7 +161,8 @@
 ДОДАТОК В
 Програмний код
 
-Репозиторій:
+Репозиторій: https://github.com/NureLavrovychOksana/apz-pzpi-22-7-lavrovych-oksana/blob/main/Pract1/pzpi-22-7-lavrovych-oksana-design-pattern/pzpi-22-7-lavrovych-oksana-design-pattern-code.cs
+
 1  interface MediaPlayer {
 2      void play(String audioType, String fileName);
 3  }
