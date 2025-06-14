@@ -13,7 +13,7 @@ const {
   toggleUserStatus,
 } = require('../services/userService');
 
-const { authenticateToken, authorize } = require('../middleware/authMiddleware');
+const { authenticateToken, authorize } = require('../middleware/auth');
 
 /*
  * =================================================================
