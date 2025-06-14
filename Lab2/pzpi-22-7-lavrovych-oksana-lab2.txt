@@ -1,1 +1,463 @@
+Міністерство освіти і науки України
+Харківський національний університет радіоелектроніки
+Кафедра програмної інженерії
 
+
+
+
+
+ЗВІТ
+з лабораторної роботи № 2
+з дисципліни: «Архітектура програмного забезпечення»
+на тему «Розробка Vision & Scope»
+
+
+
+
+
+
+Перевірив:
+ст. викл. каф. ПІ
+Сокорчук І.П.	Виконала:
+ст. гр. ПЗПІ-22-7
+Лаврович Оксана Степанівна
+
+
+
+
+
+Харків 2025
+1 ІСТОРІЯ ЗМІН
+
+	Зміни в документі нотуються до таблиці 1.1.	
+
+Таблиця 1.1 – Історія змін
+№	Дата	Версія звіту	Опис змін
+1	27.05.2025	0.1	Створено розділ “Історія змін”
+2	27.05.2025	0.1	Створено розділ “Завдання”
+3	27.05.2025	0.1	Створено розділ “Опис виконаної роботи”
+4	27.05.2025	0.1	Створено розділ “Висновки”
+5	27.05.2025	0.1	Доданий Додаток А
+6	27.05.2025	0.2	Доданий Додаток Б
+7	27.05.2025	0.3	Доданий Додаток В
+ 
+2 ЗАВДАННЯ
+Завдання до лабораторної 2:
+1.	Розробити серверну частину програмної системи, що включає CRUD-операції для основних сутностей, інтеграцію з базою даних MySQL та забезпечення зв'язку між компонентами через REST API.
+2.	Реалізувати механізм обробки даних з IoT-сенсорів: збір даних про температуру, вологість та наявнысть диму через RFID, збереження показників у базі даних, генерацію сповіщень при досягненні критичних параметрів.
+3.	Розробити механізм управління користувачами: реєстрація, авторизація (з використанням JWT-токенів), оновлення даних та видалення користувачів, управління ролями користувачів (Admin, Regular User).
+4.	Реалізувати модуль аналітики та генерації звітів.
+5.	Забезпечити підтримку багаторівневого адміністрування.
+6.	Розробити UML-діаграми для опису архітектури: Deployment Diagram для відображення фізичної структури розгортання серверної частини, Use Case Diagram для опису прецедентів використання, ER Diagram для моделювання структури бази даних, Component Diagram для опису основних компонентів серверної частини.
+7.	Реалізувати функціональне тестування: перевірити коректність CRUD-операцій, тестування роботи сенсорів та відправки даних на сервер, тестування відправки сповіщень та генерації звітів, провести перевірку ролей користувачів та захисту даних.
+8.	Створити та опублікувати на YouTube відеозапис тестування з демонстрацією основного функціоналу серверної частини та поясненням процесу тестування та інженерних рішень.
+9.	Оформити звіт за результатами лабораторної роботи, додавши розділи: аналіз завдання, опис архітектури, специфікація REST API, діаграми UML, опис математичних методів обробки даних, текстовий опис програмної реалізації та висновки щодо виконаної роботи.
+10.	Завантажити звіт у форматі PDF на платформу dl.nure.ua та додати посилання на YouTube-відео в коментарях до роботи. 
+3 ОПИС ВИКОНАНОЇ РОБОТИ
+3.1 Архітектура програмної системи
+Інформаційна система для сповіщення про небезпечні ситуації реалізована за клієнт-серверною архітектурою. Клієнтська частина (веб або мобільний застосунок) взаємодіє з серверною частиною через HTTP-запити. Серверна частина розгорнута як Node.js-додаток та відповідає за обробку запитів, бізнес-логіку та зберігання даних у базі даних. Дані надходять від IoT-пристроїв, інтегрованих через MQTT-протокол. Зберігання даних здійснюється у реляційній СУБД.
+3.2 Побудова діаграми розгортання
+Діаграма розгортання показує фізичне розташування компонентів програмної системи та їх взаємодію. Діаграма розгортання наведена на рисунку 1 в додатку Б. Система побудована на клієнт-серверній архітектурі з IoT-пристроями. Основні компоненти: Clients, Backend Server, Database Server, та IoT Device Node.
+Clients включає в себе веб-застосунок (Web Client) та мобільний додаток (Mobile Client), які взаємодіють з сервером через HTTP/HTTPS для доступу до даних та сповіщень. Backend Server на Node.js обробляє запити, взаємодіє з базою даних і обробляє дані від IoT-пристроїв. Database Server зберігає дані в MySQL.
+IoT-пристрої передають дані на сервер через MQTT, використовуючи TCP/IP. Для комунікації між компонентами застосовуються HTTP/HTTPS для клієнта та сервера, MQTT для IoT-пристроїв, і TCP/IP між сервером і базою даних.
+
+3.3 Опис архітектури серверної частини
+Серверна частина системи реалізована з використанням архітектурного принципу багаторівневої модульної побудови, що забезпечує чітке розділення відповідальностей. Сервер функціонує на базі середовища виконання Node.js, з використанням Express.js як веб-фреймворку для побудови RESTful API. Взаємодія із клієнтською частиною здійснюється через HTTP-запити, а прийом даних від IoT-пристроїв реалізований за допомогою MQTT-протоколу. Усі дані зберігаються у реляційній базі даних MySQL, доступ до якої реалізовано через відповідні ORM -рівні в сервісах.
+Серверна частина поділена на функціональні модулі, кожен із яких відповідає за окрему частину бізнес-логіки системи:
+	Модуль користувачів (user.js, userRoutes.js, userService.js): реалізує механізми реєстрації, авторизації, призначення ролей та управління правами доступу. Забезпечує автентифікацію користувачів, зберігання профільної інформації, а також контроль дій на основі ролей.
+	Модуль IoT-даних (iotdata.js, IoTDataRoutes.js, IoTDataService.js): обробляє дані, що надходять від сенсорів у польових умовах через MQTT. Забезпечує зберігання телеметрії, а також логіку попередньої обробки та аналізу цих даних для виявлення потенційних загроз.
+	Модуль геолокації (location.js, locationRoutes.js, locationService.js): відповідає за зберігання та обробку географічних координат, які пов’язані з IoT-пристроями або користувачами. Дає змогу фіксувати місця виникнення інцидентів.
+	Модуль загроз (threat.js, threatRoutes.js, threatService.js): забезпечує облік, класифікацію та управління різними типами загроз, виявлених на основі IoT-даних або зареєстрованих користувачем. Система підтримує CRUD-операції для створення, перегляду, оновлення та видалення загроз.
+	Модуль сповіщень (alert.js, alertRoutes.js, alertsService.js): генерує повідомлення про загрози, надсилає їх відповідним користувачам або групам на основі визначених правил. Може взаємодіяти з зовнішніми сервісами нотифікацій.
+	Модуль зв’язку користувачів та сповіщень (userAlert.js, userAlertRoutes.js, userAlertService.js): відстежує, які саме сповіщення були отримані конкретними користувачами, та зберігає історію подій.
+	Логічний модуль (logicService.js): виконує обробку вхідних даних, зокрема кореляцію IoT-даних, аналіз виявлених патернів та автоматичне створення записів про загрози або тривоги на основі визначених алгоритмів.
+	Комунікаційний модуль (mqtt.js): реалізує взаємодію з MQTT-брокером, приймає дані в реальному часі від підключених пристроїв і передає їх на обробку до відповідних сервісів.
+У системі визначено чотири ключових адміністративних ролей. Глобальний адміністратор управляє користувачами, доступом і загальними налаштуваннями. Адміністратор інфраструктури відповідає за технічну підтримку серверів, мережі та IoT-пристроїв. Адміністратор безпеки контролює інциденти, веде аудит і керує політиками безпеки. Адміністратор бізнес-логіки налаштовує правила обробки даних, класифікацію загроз і сценарії реагування. 
+3.4 Бізнес-логіка
+Архітектурно бізнес-логіка формалізована у вигляді окремих математичних функцій, що реалізують нормалізацію значень, розрахунок коефіцієнтів небезпеки (severity level) та класифікацію загроз відповідно до наперед визначених умов.
+3.4.1 Математична модель оцінки рівня небезпеки
+Функція calculateSeverityLevel реалізує нормалізований розрахунок індексу небезпеки за формулою зваженого середнього:
+ 
+де:
+	T — температура,
+	G — рівень газу,
+	H — відносна вологість,
+	S_f ∈{0,1} — факт виявлення диму,
+	w_t,〖 w〗_g,w_s,w_h— вагові коефіцієнти відповідно до критичності параметра.
+Загальне значення S масштабується до 10-бальної шкали для зручності інтерпретації та далі використовується як основний індикатор для пріоритезації реакційних дій.
+На основі вхідних параметрів реалізовано дискретну модель класифікації, що відносить подію до однієї з попередньо визначених категорій загроз. Алгоритм базується на правилі прийняття рішень (rule-based model), де логічні умови охоплюють комбінації граничних значень параметрів:
+	Fire — температура > 70°C та наявність диму
+	Gas Leak — газ > 300 ppm
+	Smoke — лише дим, температура ≤ 70°C
+	Overheating — температура ∈ (50; 70]
+	High Humidity — вологість > 90%
+	Critical Combination — температура > 70°C та газ > 300 ppm
+3.4.2 Статистичний аналіз загроз
+Для виявлення закономірностей у виникненні небезпечних ситуацій реалізовано модуль статистичного аналізу. Основними показниками є:
+	частота появи кожного типу загроз за фіксований часовий інтервал;
+	розподіл загроз за рівнем серйозності на шкалі від 0 до 10;
+	обчислення середнього, мінімального та максимального значень фізичних параметрів середовища: температури TTT, вологості HHH та рівня газу GGG.
+Агреговані характеристики визначаються за формулами:
+	середнє арифметичне:
+ 
+	мінімальне та максимальне значення:
+ 
+Ці метрики дозволяють здійснювати оцінку динаміки загроз, виявляти відхилення від норми та формувати підґрунтя для прийняття рішень.
+3.4.3 Прогнозування рівня загрози
+Для оцінки очікуваного рівня небезпеки реалізовано прогнозну модель на основі ковзного середнього. Метод полягає в усередненні останніх k зафіксованих рівнів серйозності загроз:
+ 
+де Si  — рівень загрози в момент часу i, k — кількість останніх вимірювань. Значення використовується як оцінка потенційної небезпеки у найближчий момент часу, що дозволяє системі попереджати про тенденцію до погіршення стану об'єкта моніторингу.
+3.5 Побудова діаграми діяльності
+На рисунку Б.4 представлено UML-діаграму діяльності, яка відображає послідовність обробки загроз на сервері. IoT-дані надходять через MQTT або REST і зберігаються в базі даних. Далі виконується обробка даних, розрахунок рівня небезпеки (severityLevel) та класифікація типу загрози. Якщо загрозу виявлено, система створює запис у таблицях Threat, Alert та UserAlert. У разі відсутності загрози обробка завершується. Діаграма охоплює основну бізнес-логіку реагування на критичні ситуації.
+3.6 Побудова діаграми прецедентів
+Діаграма прецедентів демонструє взаємодію основних акторів з інформаційною системою сповіщення про небезпечні ситуації. Вона представлена на рисунку 2 в додатку Б.
+3.7 Побудова er-діаграми
+ER-діаграма відображає структуру бази даних, включаючи сутності, атрибути, ключі та зв’язки між таблицями. Вона представлена на рисунку 3 в додатку Б. Таблиця iotdata зберігає сенсорні дані (температура, вологість, рівень газу тощо), прив’язані до конкретних локацій (locations). На основі цих даних система формує сповіщення (alerts), які містять посилання на тип загрози (threats) та відповідний запис сенсорних даних. Загрози класифікуються за типом, рівнем небезпеки та рекомендованими діями. Сповіщення надсилаються користувачам (users) через таблицю useralerts, що фіксує факт доставлення повідомлення.
+3.8 Специфікація REST API
+REST API забезпечує повноцінну взаємодію між клієнтом і сервером, реалізуючи CRUD-операції для сутностей: Users, Locations, IoTData, Threats, Alerts, UserAlerts. Підтримуються HTTP-методи (GET, POST, PUT, PATCH, DELETE), фільтрація, сортування та авторизація через JWT. Розширено маршрути та логіку доступу відповідно до ролей системи. Специфікація API наведена в додатку А.
+ 
+4 ВИСНОВКИ
+У результаті виконання роботи було розроблено серверну частину інформаційної системи сповіщення про небезпечні ситуації на основі клієнт-серверної архітектури з використанням Node.js, Express та Sequelize. Система забезпечує приймання даних від IoT-пристроїв через MQTT або REST, збереження їх у реляційній базі даних MySQL, а також автоматичну обробку даних для виявлення потенційних загроз. Реалізовано алгоритм розрахунку рівня небезпеки, статистичний аналіз загроз, прогнозування рівня загрози та класифікації загроз з подальшим створенням записів у сутностях Threat, Alert і UserAlert. Розроблено REST API для доступу до даних, реалізовано базову бізнес-логіку системи реагування на критичні події, а також побудовано UML-діаграми, що описують основні процеси серверної частини. 
+Додаток А
+ВІДЕОЗАПИС
+Відеозапис презентації результатів лабораторної роботи: https://{URL}
+Хронологічний опис відеозапису: 
+Додаток Б
+ГРАФІЧНІ МАТЕРІАЛИ
+ 
+Рисунок Б.1 - ER-діаграма даних
+ 
+Рисунок Б.2 — Діаграма розгортання
+ 
+Рисунок Б.3 – UML-діаграма прецедентів
+ 
+Рисунок Б.4 – Діаграма діяльності 
+Додаток В
+ПРОГРАМНИЙ КОД
+В.1 Реалізація математичної моделі оцінки та класифікації загроз
+Репозиторій: https://github.com/NureLavrovychOksana/apz-pzpi-22-7-lavrovych-oksana/blob/main/Lab2/pzpi-22-7-lavrovych-oksana-lab2/safezonetracker/services/logicService.js
+ 2  const WEIGHT_TEMP = 0.4;
+ 3  const WEIGHT_GAS = 0.3;
+ 4  const WEIGHT_SMOKE = 0.2;
+ 5  const WEIGHT_HUMIDITY = 0.1;
+ 6  
+ 7  /**
+ 8   * Розрахунок індексу небезпеки за формулою зваженого середнього
+ 9   * та масштабування результату до 10-бальної шкали.
+ 10  */
+ 11 function calculateSeverityLevel({ temperature, gas_level, humidity, smoke_detected }) {
+ 12   // Нормалізація значень (приведена до діапазону 0-1)
+ 13   const normTemp = Math.min(temperature / 100, 1);
+ 14   const normGas = Math.min(gas_level / 1000, 1);
+ 15   const normHumidity = Math.min(humidity / 100, 1);
+ 16   const smokeFactor = smoke_detected ? 1 : 0;
+ 17 
+ 18   const severity =
+ 19     WEIGHT_TEMP * normTemp +
+ 20     WEIGHT_GAS * normGas +
+ 21     WEIGHT_SMOKE * smokeFactor +
+ 22     WEIGHT_HUMIDITY * normHumidity;
+ 23 
+ 24   // Масштабування до 10-бальної шкали та округлення
+ 25   return Math.min(Math.max(Math.round(severity * 10), 0), 10);
+ 26 }
+ 27 
+ 28 /**
+ 29  * Класифікація загрози на основі комбінації граничних значень параметрів.
+ 30  * Порядок умов є критичним для правильного визначення пріоритетної загрози.
+ 31 */
+ 32 function classifyThreat(data) {
+ 33   const { temperature, gas_level, humidity, smoke_detected } = data;
+ 34 
+ 35   // 1. Найбільш критичний сценарій
+ 36   if (temperature > 70 && gas_level > 300) {
+ 37     return { type: 'Critical Combination', ... };
+ 38   }
+ 39   // 2. Пожежа
+ 40   if (temperature > 70 && smoke_detected) {
+ 41     return { type: 'Fire', ... };
+ 42   }
+ 43   // 3. Витік газу
+ 44   if (gas_level > 300) {
+ 45     return { type: 'Gas Leak', ... };
+ 46   }
+ 47   // 4. Задимлення без високої температури
+ 48   if (smoke_detected && temperature <= 70) {
+ 49     return { type: 'Smoke', ... };
+ 50   }
+ 51   // 5. Перегрів
+ 52   if (temperature > 50 && temperature <= 70) {
+ 53     return { type: 'Overheating', ... };
+ 54   }
+ 55   // 6. Висока вологість
+ 56   if (humidity > 90) {
+ 57     return { type: 'High Humidity', ... };
+ 58   }
+ 59 
+ 60   return null; // Загрозу не виявлено
+ 61 }
+
+В.2 Статистичний аналіз та прогнозування загроз
+Репозиторій: https://github.com/NureLavrovychOksana/apz-pzpi-22-7-lavrovych-oksana/blob/main/Lab2/pzpi-22-7-lavrovych-oksana-lab2/safezonetracker/services/statisticsService.js
+ 1  /**
+ 2   * Збір статистичних метрик: частота загроз, розподіл за рівнем
+ 3   * небезпеки та агреговані фізичні параметри (min, max, avg).
+ 4  */
+ 5  async function getThreatStatistics(req, res) {
+ 6    const { startDate, endDate } = req.query;
+ 7  
+ 8    // Частота загроз за типами
+ 9    const frequency = await Threat.findAll({
+ 10     attributes: ['threat_type', [fn('COUNT', col('id')), 'frequency']],
+ 11     where: { created_at: { [Op.between]: [startDate, endDate] } },
+ 12     group: ['threat_type'],
+ 13   });
+ 14 
+ 15   // Розподіл загроз за рівнем серйозності
+ 16   const severityDist = await Threat.findAll({
+ 17     attributes: ['severity_level', [fn('COUNT', col('id')), 'count']],
+ 18     where: { created_at: { [Op.between]: [startDate, endDate] } },
+ 19     group: ['severity_level'],
+ 20   });
+ 21 
+ 22   // Агрегація фізичних параметрів через прямий SQL-запит
+ 23   const [params] = await sequelize.query(
+ 24     `SELECT
+ 25         AVG(temperature) AS avg_temp, MIN(temperature) AS min_temp, MAX(temperature) AS max_temp,
+ 26         AVG(humidity) AS avg_humidity, MIN(humidity) AS min_humidity, MAX(humidity) AS max_humidity,
+ 27         AVG(gas_level) AS avg_gas, MIN(gas_level) AS min_gas, MAX(gas_level) AS max_gas
+ 28       FROM iot_data WHERE created_at BETWEEN :startDate AND :endDate`,
+ 29     { replacements: { startDate, endDate }, type: QueryTypes.SELECT }
+ 30   );
+ 31 
+ 32   res.json({ frequency, severityDistribution: severityDist, physicalParams: params });
+ 33 }
+ 34 
+ 35 /**
+ 36  * Прогнозування рівня загрози на основі методу ковзного середнього
+ 37  * для останніх 'k' вимірювань.
+ 38 */
+ 39 async function predictThreatLevel(req, res) {
+ 40   const k = parseInt(req.query.k) || 5; // Розмір вікна, за замовчуванням 5
+ 41 
+ 42   const [result] = await sequelize.query(
+ 43     `SELECT AVG(severity_level) AS predicted_severity
+ 44      FROM (
+ 45         SELECT severity_level FROM threats ORDER BY created_at DESC LIMIT :k
+ 46      ) AS last_k_threats`,
+ 47     { replacements: { k }, type: QueryTypes.SELECT }
+ 48   );
+ 49 
+ 50   res.json({ predictedSeverity: result?.predicted_severity || 0 });
+ 51 }
+
+В.3 Реалізація розмежування доступу на основі ролей (RBAC)
+Репозиторій: https://github.com/NureLavrovychOksana/apz-pzpi-22-7-lavrovych-oksana/blob/main/Lab2/pzpi-22-7-lavrovych-oksana-lab2/safezonetracker/middleware/auth.js
+ 1  const jwt = require('jsonwebtoken');
+ 2  const SECRET = process.env.JWT_SECRET || 'supersecret';
+ 3  
+ 4  // Middleware для аутентифікації: перевіряє JWT-токен
+ 5  const authenticateToken = (req, res, next) => {
+ 6    const authHeader = req.headers['authorization'];
+ 7    const token = authHeader && authHeader.split(' ')[1];
+ 8  
+ 9    if (token == null) return res.sendStatus(401); // Unauthorized
+ 10 
+ 11   jwt.verify(token, SECRET, (err, user) => {
+ 12     if (err) return res.sendStatus(403); // Forbidden
+ 13     req.user = user; // Зберігаємо дані користувача з токена у запиті
+ 14     next();
+ 15   });
+ 16 };
+ 17 
+ 18 // Middleware для авторизації: перевіряє роль користувача
+ 19 const authorize = (allowedRoles) => {
+ 20   return (req, res, next) => {
+ 21     if (!req.user || !req.user.role) {
+ 22       return res.status(403).json({ message: 'Forbidden: Role not found' });
+ 23     }
+ 24 
+ 25     const userRole = req.user.role;
+ 26 
+ 27     // Якщо роль користувача є у списку дозволених, надаємо доступ
+ 28     if (allowedRoles.includes(userRole)) {
+ 29       next();
+ 30     } else {
+ 31       res.status(403).json({ message: 'Forbidden: Access denied' });
+ 32     }
+ 33   };
+ 34 };
+
+В.4 Приклад застосування Middleware в роутері
+Репозиторій: https://github.com/NureLavrovychOksana/apz-pzpi-22-7-lavrovych-oksana/blob/main/Lab2/pzpi-22-7-lavrovych-oksana-lab2/safezonetracker/routes/userRoutes.js
+  1 /*
+  2  * =================================================================
+  3  * ----------------------- PROTECTED ROUTES ------------------------
+  4  *            (Требуют валидный JWT-токен)
+  5  * =================================================================
+  6  */
+  7 
+  8 // Все роуты ниже этого будут сначала проверять наличие и валидность JWT токена
+  9 UserRouter.use(authenticateToken);
+ 10 
+ 11 /**
+ 12  * @swagger
+ 13  * /users:
+ 14  *   get:
+ 15  *     summary: Get all users (Global Admin only)
+ 16  *     tags: [Users]
+ 17  *     security:
+ 18  *       - bearerAuth: []
+ 19  *     responses:
+ 20  *       200:
+ 21  *         description: A list of users
+ 22  *       403:
+ 23  *         description: Access denied
+ 24  */
+ 25 UserRouter.get('/users', authorize(['Global Admin']), async (req, res) => {
+ 26   try {
+ 27     const users = await getAllUsers();
+ 28     res.status(200).json(users);
+ 29   } catch (error) {
+ 30     res.status(500).json({ error: 'Internal Server Error' });
+ 31   }
+ 32 });
+ 33 
+ 34 /**
+ 35  * @swagger
+ 36  * /users/{id}:
+ 37  *   get:
+ 38  *     summary: Get a user by ID (Global Admin only)
+ 39  *     tags: [Users]
+ 40  *     security:
+ 41  *       - bearerAuth: []
+ 42  *     parameters:
+ 43  *       - in: path
+ 44  *         name: id
+ 45  *         required: true
+ 46  *         schema:
+ 47  *           type: integer
+ 48  *     responses:
+ 49  *       200:
+ 50  *         description: User data
+ 51  *       404:
+ 52  *         description: User not found
+ 53  */
+ 54 UserRouter.get('/users/:id', authorize(['Global Admin']), async (req, res) => {
+ 55   try {
+ 56     const user = await getUserById(Number(req.params.id));
+ 57     if (!user) {
+ 58       return res.status(404).json({ error: 'User not found' });
+ 59     }
+ 60     res.status(200).json(user);
+ 61   } catch (error) {
+ 62     res.status(500).json({ error: 'Internal Server Error' });
+ 63   }
+ 64 });
+ 65 
+ 66 /**
+ 67  * @swagger
+ 68  * /users/{id}:
+ 69  *   put:
+ 70  *     summary: Update user data (Global Admin or user themselves)
+ 71  *     tags: [Users]
+ 72  *     security:
+ 73  *       - bearerAuth: []
+ 74  *     parameters:
+ 75  *       - in: path
+ 76  *         name: id
+ 77  *         required: true
+ 78  *         schema:
+ 79  *           type: integer
+ 80  *     requestBody:
+ 81  *       content:
+ 82  *         application/json:
+ 83  *           schema:
+ 84  *             type: object
+ 85  *             properties:
+ 86  *               name:
+ 87  *                 type: string
+ 88  *               phone:
+ 89  *                 type: string
+ 90  *     responses:
+ 91  *       200:
+ 92  *         description: User updated successfully
+ 93  *       403:
+ 94  *         description: Access denied
+ 95  */
+ 96 UserRouter.put('/users/:id', async (req, res) => {
+ 97   const requestedUserId = Number(req.params.id);
+ 98   const loggedInUser = req.user;
+ 99 
+100   // Разрешаем действие, если пользователь - Global Admin ИЛИ он пытается обновить свой собственный профиль
+101   if (loggedInUser.role !== 'Global Admin' && loggedInUser.id !== requestedUserId) {
+102     return res.status(403).json({ error: 'Access denied. You can only update your own profile.' });
+103   }
+104 
+105   try {
+106     const user = await updateUser(requestedUserId, req.body);
+107     res.status(200).json(user);
+108   } catch (error) {
+109     res.status(400).json({ error: error.message });
+110   }
+111 });
+112 
+113 /**
+114  * @swagger
+115  * /users/{id}:
+116  *   delete:
+117  *     summary: Delete a user (Global Admin only)
+118  *     tags: [Users]
+119  *     security:
+120  *       - bearerAuth: []
+121  *     parameters:
+122  *       - in: path
+123  *         name: id
+124  *         required: true
+125  *         schema:
+126  *           type: integer
+127  *     responses:
+128  *       200:
+129  *         description: User deleted successfully
+130  *       403:
+131  *         description: Access denied
+132  */
+133 UserRouter.delete('/users/:id', authorize(['Global Admin']), async (req, res) => {
+134   try {
+135     await deleteUser(Number(req.params.id));
+136     res.status(200).json({ message: 'User deleted successfully' });
+137   } catch (error) {
+138     res.status(400).json({ error: error.message });
+139   }
+140 });
+141 
+142 /**
+143  * @swagger
+144  * /users/{id}/status:
+145  *   put:
+146  *     summary: Toggle user status between active/inactive (Global Admin only)
+147  *     tags: [Users]
+148  *     security:
+149  *       - bearerAuth: []
+150  *     parameters:
+151  *       - in: path
+152  *         name: id
+153  *         required: true
+154  *         schema:
+155  *           type: integer
+156  *     responses:
+157  *       200:
+158  *         description: User status changed
+159  *       403:
+160  *         description: Access denied
+161  */
+162 UserRouter.put('/users/:id/status', authorize(['Global Admin']), async (req, res) => {
+163   try {
+164     const updatedUser  = await toggleUserStatus(req.params.id);
+165     res.status(200).json({ message: `User status for ${updatedUser.email} has been changed to ${updatedUser.status}.` });
+166   } catch (error) {
+167     res.status(500).json({ message: error.message });
+168   }
+169 });
+170 
+171 module.exports = UserRouter;
