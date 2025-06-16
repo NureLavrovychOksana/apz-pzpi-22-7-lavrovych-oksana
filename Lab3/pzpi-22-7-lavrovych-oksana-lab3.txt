@@ -139,7 +139,7 @@ o	Сервіси API (src/services): Логіка роботи з API згруп
 Додаток В
 ПРОГРАМНИЙ КОД
 В.1 Реалізація захищеного маршруту з перевіркою ролей
-Репозиторій: {URL_до_репозиторію}/src/components/PrivateRoute.tsx
+Репозиторій: https://github.com/NureLavrovychOksana/apz-pzpi-22-7-lavrovych-oksana/blob/main/Lab3/pzpi-22-7-lavrovych-oksana-lab3/src/routes/PrivateRoute.tsx
 1   import React from 'react';
 2   import { Navigate, Outlet } from 'react-router-dom';
 3   import { useAuth } from '../hooks/useAuth';
@@ -165,7 +165,7 @@ o	Сервіси API (src/services): Логіка роботи з API згруп
 23    return <Outlet />;
 24  };
 В.2 Налаштування HTTP-клієнта Axios з інтерцепторами
-Репозиторій: {URL_до_репозиторію}/src/components/апи.tsx
+Репозиторій: https://github.com/NureLavrovychOksana/apz-pzpi-22-7-lavrovych-oksana/blob/main/Lab3/pzpi-22-7-lavrovych-oksana-lab3/src/api/api.ts
 1   import axios from 'axios';
 2   
 3   const api = axios.create({
@@ -200,7 +200,7 @@ o	Сервіси API (src/services): Логіка роботи з API згруп
 32  export default api;
 
 В.3 Керування глобальним станом за допомогою React Context API
-Репозиторій: {URL_до_репозиторію}/src/components/апи.tsx
+Репозиторій: https://github.com/NureLavrovychOksana/apz-pzpi-22-7-lavrovych-oksana/blob/main/Lab3/pzpi-22-7-lavrovych-oksana-lab3/src/context/AuthContext.tsx
 
 1   import React, { createContext, useState, useEffect, ReactNode, useContext } from 'react';
 2   import { User, LoginCredentials } from '../types'; 
@@ -281,7 +281,8 @@ o	Сервіси API (src/services): Логіка роботи з API згруп
 77    }
 78    return context;
 79  };
-В.4 Реалізація функціоналу адміністрування з динамічним рендерингом Репозиторій: {URL_до_репозиторію}/src/components/апи.tsx
+В.4 Реалізація функціоналу адміністрування з динамічним рендерингом 
+Репозиторій: https://github.com/NureLavrovychOksana/apz-pzpi-22-7-lavrovych-oksana/blob/main/Lab3/pzpi-22-7-lavrovych-oksana-lab3/src/pages/admin/SystemControlPage.tsx
 1   import React, { useState, useEffect } from 'react';
 2   import { useAuth } from '../../hooks/useAuth';
 3   import * as adminService from '../../api/adminService';
