@@ -1,1 +1,475 @@
+Міністерство освіти і науки України
+Харківський національний університет радіоелектроніки
+Кафедра програмної інженерії
+
+
+
+
+
+Лабораторна робота №4
+з дисципліни: «Архітектура програмного забезпечення»
+на тему «Розробка програмної архітектури, створення та відлагодження програмного застосунку мобільного пристрою для програмної системи»
+
+
+
+
+
+
+Перевірив:
+ст. викл. каф. ПІ
+Сокорчук І.П.	Виконала:
+ст. гр. ПЗПІ-22-7
+Лаврович Оксана Степанівна
+
+
+
+
+
+Харків 2025
+
+1 ІСТОРІЯ ЗМІН
+
+	Зміни в документі нотуються до таблиці 1.1.	
+№	Дата	Версія звіту	Опис змін та виправлень
+1	10.06.25	0.1	Створено розділ «Історія змін»
+2	10.06.25	0.1	Створено розділ «Завдання»
+3	10.06.25	0.1	Створено розділ «Опис виконаної роботи»
+4	10.06.25	0.1	Створено розділ «Висновки»
+5	10.06.25	0.1	Додано додаток А з посиланням на відеоролик
+6	10.06.25	0.1	Додано додаток Б з графічними матеріалами
+7	10.06.25	0.1	Додано додаток В з програмним кодом
+Таблиця 1.1 – Історія змін
+
+2 ЗАВДАННЯ
+Завдання до лабораторної роботи № 4:
+1.	Розробити архітектуру мобільного клієнта для «Системи сповіщення про небезпечну ситуацію» на платформі Android з використанням мови програмування Kotlin.
+2.	Реалізувати основний функціонал мобільного застосунку, включаючи:
+o	Автентифікацію користувача через існуючий REST API.
+o	Отримання та відображення push-сповіщень про нові загрози в режимі реального часу.
+o	Перегляд детальної історії сповіщень.
+o	Налаштування профілю користувача, зокрема вибір пріоритетних типів загроз для отримання сповіщень.
+3.	Забезпечити надійну та безпечну взаємодію мобільного клієнта з серверною частиною через захищений API, включаючи передачу токенів автентифікації та обробку помилок.
+4.	Спроектувати та оформити UML-діаграми, що ілюструють архітектуру та процеси роботи мобільного клієнта: діаграму компонентів та діаграму розгортання.
+5.	Провести тестування реалізованого функціоналу, включаючи отримання сповіщень, перегляд історії та синхронізацію налаштувань із сервером.
+6.	Підготувати звіт та відеозапис з демонстрацією роботи мобільного застосунку.
+
+3 ОПИС ВИКОНАНОЇ РОБОТИ
+У рамках виконання лабораторної роботи було спроєктовано та розроблено нативний мобільний клієнт для «Системи сповіщення про небезпечну ситуацію» на платформі Android. Метою розробки було забезпечення оперативного доступу користувачів до ключового функціоналу системи, зокрема отримання сповіщень у реальному часі та керування персональними налаштуваннями з мобільних пристроїв.
+3.1 Програмна архітектура мобільного клієнта
+Проєктування архітектури мобільного клієнта базувалося на сучасних рекомендованих підходах до розробки Android-застосунків для забезпечення гнучкості, масштабованості та надійності системи. В основу було покладено багатошарову архітектуру, що реалізує принципи патерну MVVM (Model-View-ViewModel). Такий підхід гарантує чітке розділення відповідальності між компонентами, що спрощує розробку, тестування та подальшу підтримку кодової бази.
+Архітектура застосунку структурована за трьома основними логічними шарами:
+1.	Шар представлення (UI Layer). Цей шар відповідає за візуалізацію даних та обробку всіх взаємодій з користувачем. Його реалізація повністю базується на декларативному інструментарії Jetpack Compose. Стан інтерфейсу керується класами ViewModel, які надають дані у вигляді реактивних потоків (StateFlow). Це дозволяє UI автоматично оновлюватися при зміні стану без необхідності імперативного маніпулювання елементами. Навігація між екранами застосунку реалізована за допомогою компонента Navigation Compose, що забезпечує типізований та стійкий до помилок граф навігації.
+2.	Шар домену (Domain Layer). Цей шар інкапсулює складну бізнес-логіку та правила, специфічні для предметної області. Він слугує проміжним рівнем між шаром представлення та шаром даних. Логіка в цьому шарі реалізована у вигляді класів UseCase, кожен з яких відповідає за виконання однієї конкретної бізнес-операції (наприклад, GetThreatsHistoryUseCase). Такий підхід дозволяє перевикористовувати бізнес-логіку в різних ViewModel та полегшує її ізольоване тестування.
+3.	Шар даних (Data Layer). Цей шар відповідає за надання даних для решти застосунку, абстрагуючи їх джерела. Центральним елементом цього шару є патерн Repository. ThreatsRepository виступає як єдине джерело істини (Single Source of Truth) для доменного шару. Він інкапсулює логіку вибору джерела даних: отримання актуальної інформації з мережі або завантаження кешованих даних у разі відсутності інтернет-з'єднання. Шар даних включає мережеве джерело, реалізоване через Retrofit, та локальне джерело на базі DataStore Preferences для зберігання налаштувань та токенів.
+Для зв'язування всіх шарів та автоматичного впровадження залежностей (Dependency Injection) використовується бібліотека Dagger Hilt. Вона керує життєвим циклом об'єктів та забезпечує слабку зв'язність між компонентами системи, що є ключовим для побудови надійної архітектури.
+3.2 Програмні технології та інструменти
+Вибір технологічного стеку був зумовлений вимогами до продуктивності, надійності та швидкості розробки нативного Android-застосунку.
+•	Мова програмування: Kotlin обрано як основну мову завдяки її виразності, безпеці щодо null-значень та повній підтримці з боку Google. Для керування асинхронними операціями, такими як мережеві запити чи робота з базою даних, активно використовуються Kotlin Coroutines та Flow, що дозволяє писати чистий та ефективний асинхронний код.
+•	Побудова користувацького інтерфейсу: Jetpack Compose використовується для створення всього користувацького інтерфейсу. Декларативний підхід дозволяє описувати UI як функцію від стану, що значно спрощує розробку складних та динамічних екранів. Для дотримання єдиного візуального стилю застосовано принципи та компоненти Material Design 3.
+•	Мережева взаємодія: Для комунікації з REST API серверної частини використовується бібліотека Retrofit, яка дозволяє декларативно описувати API-ендпоїнти за допомогою інтерфейсів. В якості HTTP-клієнта застосовано OkHttp, що надає можливість гнучкого налаштування, зокрема додавання інтерцепторів для автоматичної підстановки токенів автентифікації та логування запитів.
+•	Зберігання даних: Для збереження простих пар ключ-значення, таких як токен автентифікації та налаштування користувача, обрано DataStore Preferences. Це сучасне рішення з Jetpack, яке є асинхронним, транзакційним та безпечнішим у порівнянні з застарілим SharedPreferences.
+•	Push-сповіщення: Інтеграція з Firebase Cloud Messaging (FCM) забезпечує отримання сповіщень від сервера в режимі реального часу, що є критично важливим для оперативного інформування користувачів про нові загрози.
+3.3 Реалізація функціоналу мобільного клієнта
+Мобільний клієнт надає користувачам набір інструментів для оперативного моніторингу, реагування та аналізу небезпечних ситуацій. Основний функціонал було спроєктовано з урахуванням потреб користувачів у швидкому доступі до критичної інформації та зручному керуванні персональними налаштуваннями.
+3.3.1 Інтерактивна панель моніторингу та деталізація загроз
+Головний екран застосунку являє собою інтерактивну панель моніторингу, що слугує центральним вузлом для отримання актуальної інформації. При відкритті екрана DashboardViewModel ініціює асинхронне завантаження двох ключових блоків даних: поточних показників з IoT-сенсорів та списку останніх активних загроз. 
+Список загроз представлений у вигляді карток, кожна з яких містить візуальний індикатор рівня небезпеки, тип загрози, місцезнаходження та час виявлення. Це дозволяє користувачеві миттєво оцінити ситуацію. Натискання на картку загрози ініціює перехід на екран деталізації, де надається повний опис інциденту, включаючи конкретні показники сенсорів, що його спричинили, та рекомендовані дії для реагування. Цей екран також може містити інтерактивні елементи, наприклад, кнопку для підтвердження отримання сповіщення (Acknowledge), яка надсилає відповідний запит на сервер.
+3.3.2 Перегляд історії сповіщень з можливостями фільтрації та пошуку
+Для аналізу минулих інцидентів реалізовано повноцінний екран "Архів сповіщень". Цей екран дозволяє переглядати повну історію всіх зафіксованих у системі загроз. Для зручності користувача ThreatsHistoryViewModel надає інструменти для гнучкої фільтрації та пошуку. Користувач може відфільтрувати список за періодом (наприклад, за останній тиждень чи місяць), за типом загрози (наприклад, показати лише випадки пожежної небезпеки) або за рівнем небезпеки.
+При застосуванні фільтрів ViewModel не завантажує весь набір даних заново, а відправляє на сервер запит з відповідними параметрами, що оптимізує використання мережевого трафіку та ресурсів сервера. Список результатів оновлюється динамічно за допомогою StateFlow, забезпечуючи плавний та відгукливий користувацький досвід. Кожен елемент списку є клікабельним і веде на той самий екран деталізації, що й на головній панелі.
+3.3.3 Керування персональними налаштуваннями та профілем
+Окрім налаштувань сповіщень, мобільний клієнт надає користувачеві можливість керувати своїми особистими даними. На екрані "Профіль" реалізовано форми для зміни імені та контактного телефону. Всі зміни валідуються на стороні клієнта (наприклад, перевірка коректності формату номера телефону) перед відправкою на сервер через захищений API-ендпоїнт.
+Важливою функцією є безпечна зміна пароля. Для цього передбачено окрему форму, яка вимагає введення старого пароля для підтвердження особи користувача, а також нового пароля та його повторного введення. Це унеможливлює несанкціоновану зміну пароля, навіть якщо зловмисник отримає доступ до розблокованого пристрою. Усі дані, пов'язані з паролями, передаються виключно через HTTPS.
+3.3.4 Механізм отримання та обробки Push-сповіщень
+Інтеграція з Firebase Cloud Messaging (FCM) забезпечує отримання сповіщень від сервера в режимі реального часу, що є критично важливим для оперативного інформування користувачів про нові загрози. При першому запуску та автентифікації застосунок генерує унікальний реєстраційний токен пристрою, який надсилається на сервер та асоціюється з обліковим записом користувача.
+Коли серверна частина системи фіксує нову загрозу, що відповідає критеріям та налаштуванням пріоритетів користувача, вона формує та надсилає цільове push-сповіщення через FCM. На клієнті спеціалізований сервіс, що наслідує FirebaseMessagingService, перехоплює це повідомлення. Цей сервіс функціонує у фоновому режимі, що дозволяє отримувати сповіщення навіть тоді, коли застосунок закритий. Після отримання даних сервіс створює та відображає системне сповіщення Android з назвою та коротким описом загрози. Натискання на таке сповіщення відкриває застосунок на екрані з детальною інформацією про відповідний інцидент.
+3.4 Керування персональними налаштуваннями
+Мобільний клієнт надає користувачам можливість гнучко керувати своїм профілем та налаштуваннями сповіщень. На екрані "Профіль" реалізовано функціонал для вибору пріоритетних типів загроз. Користувач може за допомогою перемикачів вказати, сповіщення про які саме події (наприклад, "Пожежа", "Витік газу", "Перегрів") він бажає отримувати.
+Цей вибір негайно зберігається на пристрої за допомогою DataStore Preferences, що дозволяє застосунку миттєво фільтрувати сповіщення на клієнтському рівні. Одночасно з локальним збереженням, ProfileViewModel ініціює асинхронний запит до серверного API для синхронізації цих налаштувань з базою даних. Такий підхід гарантує, що сервер буде надсилати push-сповіщення лише про релевантні для користувача події, що зменшує навантаження на мережу та не відволікає користувача зайвою інформацією.
+3.5 Забезпечення безпеки на рівні мобільного клієнта
+Безпека даних користувача є одним з головних пріоритетів. Для її забезпечення впроваджено комплекс заходів. Автентифікація в системі відбувається за допомогою JWT (JSON Web Token). Після успішного входу користувач отримує токен доступу, який зберігається в DataStore. Для всіх подальших запитів до захищених ресурсів API цей токен автоматично додається до заголовка Authorization за допомогою кастомного OkHttp Interceptor.
+ 
+4 ВИСНОВКИ
+У ході виконання лабораторної роботи було успішно спроєктовано та реалізовано нативний мобільний клієнт для «Системи сповіщення про небезпечну ситуацію» на платформі Android.
+Основні результати роботи:
+1.	Розроблено стійку та масштабовану архітектуру мобільного застосунку на основі патерну MVVM, принципів чистої архітектури та сучасних технологій, таких як Kotlin, Jetpack Compose та Dagger Hilt.
+2.	Реалізовано ключовий функціонал, що вимагався для мобільного клієнта: безпечну автентифікацію, отримання push-сповіщень у реальному часі за допомогою Firebase Cloud Messaging, перегляд історії загроз та гнучке налаштування профілю користувача.
+3.	Забезпечено надійну взаємодію з існуючою серверною частиною через REST API, включаючи механізми обробки токенів та централізовану обробку мережевих запитів.
+4.	Отримано практичний досвід у розробці мобільних застосунків, застосуванні патернів проєктування для Android, інтеграції з хмарними сервісами (FCM) та роботі з асинхронними потоками даних.
+Створений мобільний клієнт повністю відповідає поставленим завданням, розширює функціональні можливості системи та забезпечує оперативний доступ до критично важливої інформації з мобільних пристроїв.
+ 
+Додаток А
+ВІДЕОЗАПИС
+Відеозапис презентації результатів лабораторної роботи: 
+ 
+Додаток Б
+ГРАФІЧНІ МАТЕРІАЛИ
+ 
+Рисунок Б.1 — UML-діаграма прецедентів мобільного клієнта
+ 
+Рисунок Б.2 — UML-діаграма компонентів мобільного клієнта
+ 
+Рисунок Б.3 — UML-діаграма розгортання
+ 
+Додаток В
+ПРОГРАМНИЙ КОД
+В.1 Отримання даних та керування станом екрану (MVVM)
+Репозиторій: https://github.comNureLavrovychOksana/apz-pzpi-22-7-lavrovych-oksana/blob/main/app/src/main/java/com/example/safezonetracker/ui/screens/dashboard/DashboardViewModel.kt
+1  package com.example.safezonetracker.ui.screens.dashboard
+ 2
+ 3  import androidx.lifecycle.ViewModel
+ 4  import androidx.lifecycle.viewModelScope
+ 5  import com.example.safezonetracker.data.model.Threat
+ 6  import com.example.safezonetracker.data.repository.AppRepository
+ 7  import dagger.hilt.android.lifecycle.HiltViewModel
+ 8  import kotlinx.coroutines.flow.MutableStateFlow
+ 9  import kotlinx.coroutines.flow.StateFlow
+10  import kotlinx.coroutines.flow.asStateFlow
+11  import kotlinx.coroutines.launch
+12  import javax.inject.Inject
+13
+14  sealed interface DashboardUiState {
+15      object Loading : DashboardUiState
+16      data class Success(val threats: List<Threat>) : DashboardUiState
+17      data class Error(val message: String) : DashboardUiState
+18  }
+19
+20  @HiltViewModel
+21  class DashboardViewModel @Inject constructor(
+22      private val repository: AppRepository
+23  ) : ViewModel() {
+24      private val _uiState = MutableStateFlow<DashboardUiState>(DashboardUiState.Loading)
+25      val uiState: StateFlow<DashboardUiState> = _uiState.asStateFlow()
+26
+27      init {
+28          loadDashboardData()
+29      }
+30
+31      fun refreshData() {
+32          loadDashboardData()
+33      }
+34
+35      private fun loadDashboardData() {
+36          viewModelScope.launch {
+37              _uiState.value = DashboardUiState.Loading
+38              try {
+39                  // Використовуємо метод з репозиторію
+40                  val threats = repository.getCurrentThreats()
+41                  _uiState.value = DashboardUiState.Success(threats)
+42              } catch (e: Exception) {
+43                  _uiState.value = DashboardUiState.Error(e.message ?: "Помилка завантаження даних")
+44              }
+45          }
+46      }
+47  }
+В.2 Взаємодія з віддаленим API (Retrofit)
+Репозиторій: https://github.com/{your_username}/{your_repo}/blob/main/app/src/main/java/com/example/safezonetracker/data/remote/SafeZoneApi.kt
+1  package com.example.safezonetracker.data.remote
+ 2
+ 3  import com.example.safezonetracker.data.remote.models.*
+ 4  import retrofit2.Response
+ 5  import retrofit2.http.*
+ 6
+ 7  interface SafeZoneApi {
+ 8
+ 9      // === 1. АВТЕНТИФІКАЦІЯ ТА РЕЄСТРАЦІЯ (PUBLIC) ===
+10      @POST("users/register")
+11      suspend fun register(@Body request: RegisterRequest): Response<UserDto>
+12
+13      @POST("users/login")
+14      suspend fun login(@Body request: LoginRequest): Response<LoginResponse>
+15
+16      // === 2. КЕРУВАННЯ ПРОФІЛЕМ КОРИСТУВАЧА (PROTECTED) ===
+17      @GET("users/{id}")
+18      suspend fun getMyProfile(
+19          @Header("Authorization") token: String,
+20          @Path("id") userId: Int
+21      ): Response<UserDto>
+22
+23      @PUT("users/{id}")
+24      suspend fun updateMyProfile(
+25          @Header("Authorization") token: String,
+26          @Path("id") userId: Int,
+27          @Body profileData: Map<String, String>
+28      ): Response<UserDto>
+29
+30      @PUT("users/change-password")
+31      suspend fun changePassword(
+32          @Header("Authorization") token: String,
+33          @Body passwords: Map<String, String>
+34      ): Response<Map<String, String>>
+35
+36      @POST("devices/register")
+37      suspend fun registerDeviceToken(
+38          @Header("Authorization") token: String,
+39          @Body deviceToken: Map<String, String>
+40      ): Response<Unit>
+41
+42      // === 3. ЗАГРОЗИ (THREATS) ===
+43      @GET("api/threats")
+44      suspend fun getAllThreats(@Header("Authorization") token: String): Response<List<ThreatDto>>
+45
+46      @GET("api/current-threats")
+47      suspend fun getCurrentThreats(@Header("Authorization") token: String): Response<List<ThreatDto>>
+48
+49      @GET("api/threats/{id}")
+50      suspend fun getThreatById(
+51          @Header("Authorization") token: String,
+52          @Path("id") threatId: Int
+53      ): Response<ThreatDto>
+54
+55      // === 4. IoT ДАНІ ТА СТАТИСТИКА ===
+56      @GET("api/iot-data/recent")
+57      suspend fun getRecentIoTData(@Header("Authorization") token: String): Response<List<IoTSensorDataDto>>
+58
+59      @GET("api/statistics")
+60      suspend fun getStatistics(
+61          @Header("Authorization") token: String,
+62          @Query("period") period: String
+63      ): Response<StatisticsDto>
+64
+65      // === 5. АДМІНІСТРУВАННЯ (ADMIN ONLY) ===
+66      @GET("admin/system-status")
+67      suspend fun getSystemStatus(@Header("Authorization") token: String): Response<List<SystemStatusDto>>
+68
+69      @GET("admin/logic-settings")
+70      suspend fun getLogicSettings(@Header("Authorization") token: String): Response<LogicSettingsDto>
+71
+72      @PUT("admin/logic-settings")
+73      suspend fun updateLogicSettings(
+74          @Header("Authorization") token: String,
+75          @Body settings: LogicSettingsDto
+76      ): Response<LogicSettingsDto>
+77
+78      @GET("admin/audit-logs")
+79      suspend fun getAuditLogs(@Header("Authorization") token: String): Response<List<AuditLogDto>>
+80
+81      @GET("users")
+82      suspend fun getAllUsers(@Header("Authorization") token: String): Response<List<UserDto>>
+83
+84      @PUT("users/{id}/status")
+85      suspend fun toggleUserStatus(
+86          @Header("Authorization") token: String,
+87          @Path("id") userId: Int
+88      ): Response<Map<String, String>>
+89  }
+В.3 Централізований доступ до даних (Repository Pattern)
+Репозиторій: https://github.com/{your_username}/{your_repo}/blob/main/app/src/main/java/com/example/safezonetracker/data/repository/AppRepository.kt
+1  package com.example.safezonetracker.data.repository
+ 2
+ 3  import com.example.safezonetracker.data.local.UserPreferences
+ 4  import com.example.safezonetracker.data.model.*
+ 5  import com.example.safezonetracker.data.remote.SafeZoneApi
+ 6  import com.example.safezonetracker.data.remote.models.*
+ 7  import com.google.firebase.Firebase
+ 8  import com.google.firebase.messaging.messaging
+ 9  import kotlinx.coroutines.CoroutineScope
+10  import kotlinx.coroutines.Dispatchers
+11  import kotlinx.coroutines.flow.Flow
+12  import kotlinx.coroutines.flow.first
+13  import kotlinx.coroutines.launch
+14  import retrofit2.Response
+15  import javax.inject.Inject
+16  import javax.inject.Singleton
+17
+18  @Singleton
+19  class AppRepository @Inject constructor(
+20      private val api: SafeZoneApi,
+21      private val userPrefs: UserPreferences
+22  ) {
+23
+24      // потік з локальними налаштуваннями
+25      val notificationPreferences: Flow<NotificationPreferences> = userPrefs.notificationPreferences
+26
+27      /**
+28       * Зберігає налаштування сповіщень ТІЛЬКИ локально.
+29       */
+30      suspend fun saveNotificationPreferences(prefs: NotificationPreferences) {
+31          userPrefs.saveNotificationPreferences(prefs)
+32      }
+33      // =====  ПУБЛІЧНИЙ ПОТІК ДЛЯ ТОКЕНА =====
+34      /**
+35       * Потік, що надає поточний токен автентифікації.
+36       * ViewModel'и можуть підписатися на нього для відстеження стану входу.
+37       * Null, якщо користувач не залогінений.
+38       */
+39      val authToken: Flow<String?> = userPrefs.authToken
+40
+41      // --- 1. АВТЕНТИФІКАЦІЯ ТА ПРОФІЛЬ ---
+42
+43      suspend fun login(email: String, pass: String): User {
+44          val request = LoginRequest(email = email, password = pass)
+45          val response = api.login(request)
+46          val loginResponse = handleApiResponse(response)
+47
+48          userPrefs.saveAuthToken(loginResponse.token)
+49          userPrefs.saveUserId(loginResponse.user.id)
+50
+51          registerFcmTokenOnLogin()
+52
+53          return mapUserDtoToUser(loginResponse.user)
+54      }
+55
+56      suspend fun register(name: String, email: String, pass: String): User {
+57          val request = RegisterRequest(name = name, email = email, password = pass)
+58          val response = api.register(request)
+59          val userDto = handleApiResponse(response)
+60          return mapUserDtoToUser(userDto)
+61      }
+62
+63      suspend fun logout() {
+64          userPrefs.clearAuthToken()
+65          userPrefs.clearUserId()
+66      }
+67
+68      suspend fun getMyProfile(): User {
+69          val token = getAuthHeader()
+70          val userId = userPrefs.userId.first() ?: throw Exception("User ID not found in local storage.")
+71          val response = api.getMyProfile(token, userId)
+72          val userDto = handleApiResponse(response)
+73          return mapUserDtoToUser(userDto)
+74      }
+75
+76      // --- 2. РОБОТА З ЗАГРОЗАМИ (THREATS) ---
+77
+78      suspend fun getCurrentThreats(): List<Threat> {
+79          val response = api.getCurrentThreats(getAuthHeader())
+80          return handleApiResponse(response).map { mapThreatDtoToThreat(it) }
+81      }
+82
+83      suspend fun getAllThreats(): List<Threat> {
+84          val response = api.getAllThreats(getAuthHeader())
+85          return handleApiResponse(response).map { mapThreatDtoToThreat(it) }
+86      }
+87
+88      suspend fun getThreatById(threatId: Int): Threat {
+89          val response = api.getThreatById(getAuthHeader(), threatId)
+90          return mapThreatDtoToThreat(handleApiResponse(response))
+91      }
+92
+93      // --- 4. АДМІНІСТРУВАННЯ ---
+94
+95      suspend fun getLogicSettings(): LogicSettings {
+96          val response = api.getLogicSettings(getAuthHeader())
+97          return mapLogicSettingsDtoToModel(handleApiResponse(response))
+98      }
+99
+100      suspend fun updateLogicSettings(settings: LogicSettings): LogicSettings {
+101          val dto = mapLogicSettingsToDto(settings)
+102          val response = api.updateLogicSettings(getAuthHeader(), dto)
+103          return mapLogicSettingsDtoToModel(handleApiResponse(response))
+104      }
+105 }
+В.4 Обробка Push-сповіщень у фоновому режимі
+Репозиторій: https://github.com/{your_username}/{your_repo}/blob/main/app/src/main/java/com/example/safezonetracker/services/PushNotificationService.kt
+1  package com.example.safezonetracker.services
+ 2
+ 3  import android.app.NotificationChannel
+ 4  import android.app.NotificationManager
+ 5  import android.app.PendingIntent
+ 6  import android.content.Context
+ 7  import android.content.Intent
+ 8  import android.os.Build
+ 9  import android.util.Log
+10  import androidx.core.app.NotificationCompat
+11  import com.example.safezonetracker.MainActivity
+12  import com.example.safezonetracker.R
+13  import com.example.safezonetracker.data.remote.SafeZoneApi
+14  import com.google.firebase.messaging.FirebaseMessagingService
+15  import com.google.firebase.messaging.RemoteMessage
+16  import dagger.hilt.android.AndroidEntryPoint
+17  import kotlinx.coroutines.CoroutineScope
+18  import kotlinx.coroutines.Dispatchers
+19  import kotlinx.coroutines.flow.firstOrNull
+20  import kotlinx.coroutines.launch
+21  import javax.inject.Inject
+22  import com.example.safezonetracker.data.local.UserPreferences
+23
+24  @AndroidEntryPoint
+25  class PushNotificationService : FirebaseMessagingService() {
+26
+27      @Inject
+28      lateinit var api: SafeZoneApi
+29
+30      @Inject
+31      lateinit var userPreferences: UserPreferences
+32
+33      /**
+34       * Викликається, коли генерується новий токен або оновлюється існуючий.
+35       */
+36      override fun onNewToken(token: String) {
+37          super.onNewToken(token)
+38          Log.d("FCM", "New token generated: $token")
+39
+40          CoroutineScope(Dispatchers.IO).launch {
+41              val authToken = userPreferences.authToken.firstOrNull()
+42              if (authToken != null) {
+43                  try {
+44                      val authHeader = "Bearer $authToken"
+45                      val requestBody = mapOf("deviceToken" to token)
+46                      api.registerDeviceToken(authHeader, requestBody)
+47                      Log.d("FCM", "New token successfully sent to server.")
+48                  } catch (e: Exception) {
+49                      Log.e("FCM", "Failed to send new token to server", e)
+50                  }
+51              } else {
+52                  Log.d("FCM", "User is not authenticated, new token will be sent after login.")
+53              }
+54          }
+55      }
+56
+57      /**
+58       * Викликається, коли приходить повідомлення.
+59       */
+60      override fun onMessageReceived(remoteMessage: RemoteMessage) {
+61          super.onMessageReceived(remoteMessage)
+62
+63          val data = remoteMessage.data
+64          val title = data["title"] ?: "Нова загроза!"
+65          val body = data["body"] ?: "Виявлено потенційну небезпеку."
+66          val threatId = data["threatId"] // ID загрози для навігації
+67
+68          Log.d("FCM", "Message received: title='$title', body='$body', threatId='$threatId'")
+69          showNotification(title, body, threatId)
+70      }
+71
+72      private fun showNotification(title: String, body: String, threatId: String?) {
+73          val intent = Intent(this, MainActivity::class.java).apply {
+74              addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+75              if (threatId != null) {
+76                  putExtra("threat_id", threatId)
+77              }
+78          }
+79
+80          val pendingIntent = PendingIntent.getActivity(
+81              this,
+82              System.currentTimeMillis().toInt(), // Використовуємо унікальний requestCode
+83              intent,
+84              PendingIntent.FLAG_ONE_SHOT or PendingIntent.FLAG_IMMUTABLE
+85          )
+86
+87          val channelId = "THREAT_CHANNEL_ID"
+88          val notificationBuilder = NotificationCompat.Builder(this, channelId)
+89              .setSmallIcon(R.drawable.ic_notification_icon) // ВАЖЛИВО: Обов'язкова іконка
+90              .setContentTitle(title)
+91              .setContentText(body)
+92              .setStyle(NotificationCompat.BigTextStyle().bigText(body))
+93              .setAutoCancel(true)
+94              .setPriority(NotificationCompat.PRIORITY_HIGH)
+95              .setContentIntent(pendingIntent)
+96
+97          val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+98
+99          if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+100              val channel = NotificationChannel(
+101                  channelId,
+102                  "Сповіщення про загрози",
+103                  NotificationManager.IMPORTANCE_HIGH
+104              )
+105              notificationManager.createNotificationChannel(channel)
+106          }
+107
+108          notificationManager.notify(System.currentTimeMillis().toInt(), notificationBuilder.build())
+109      }
+110  }
 
