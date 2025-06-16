@@ -1,0 +1,642 @@
+Міністерство освіти і науки України
+Харківський національний університет радіоелектроніки
+Кафедра програмної інженерії
+
+
+
+
+ЗВІТ
+з лабораторної роботи № 3
+з дисципліни: «Архітектура програмного забезпечення»
+на тему «Розробка програмної архітектури та створення і відлагодження програмного коду веб клієнта програмної системи»
+
+
+
+
+
+
+Перевірив:
+ст. викл. каф. ПІ
+Сокорчук І.П.	Виконала:
+ст. гр. ПЗПІ-22-7
+Лаврович Оксана Степанівна
+
+
+
+
+
+Харків 2025
+1 ІСТОРІЯ ЗМІН
+Зміни в документі нотуються до таблиці 3.1.
+
+Таблиця 3.1 – Історія змін
+№	Дата	Версія звіту	Опис змін та виправлень
+1	19.05.25	0.1	Створено розділ «Історія змін»
+2	19.05.25	0.1	Створено розділ «Завдання»
+3	19.05.25	0.1	Створено розділ «Опис виконаної роботи»
+4	19.05.25	0.1	Створено розділ «Висновки»
+5	24.05.25	0.1	Додано додаток А з посиланням на відеоролик
+6	24.05.25	0.1	Додано додаток Б з графічними матеріалами
+7	24.05.25	0.1	Додано додаток В з програмним кодом
+ 
+2 ЗАВДАННЯ
+Завдання до лабораторної 3:
+1.	Розробити архітектуру клієнтської (front-end) частини програмної системи.
+2.	Реалізувати веб-клієнт програмної системи, забезпечивши авторизацію, відображення основних даних, підтримку роботи з API та реалізацію ролей користувачів і адміністраторів.
+3.	Створити інтерфейс адміністрування системи з можливістю управління користувачами, даними, резервним копіюванням налаштувань і даних, експортом та імпортом даних, керуванням сертифікатами та іншими ключовими функціями згідно з вимогами до адміністративної панелі.
+4.	Реалізувати механізми захисту персональних даних на рівні клієнтської частини (робота з токенами, зберігання даних, захищена аутентифікація, обмеження доступу до ресурсів).
+5.	Розробити й оформити діаграми UML: діаграму прецедентів (Use Case Diagram), діаграму компонент (Component Diagram), а також не менше двох діаграм на вибір.
+6.	Провести функціональне тестування веб-клієнта, перевірити коректність основних сценаріїв роботи, підтримку авторизації, налаштування локалізації, роботу адміністративної панелі та взаємодію з серверною частиною через API.
+7.	Створити та опублікувати на YouTube відеозапис тестування з демонстрацією основного функціоналу веб-клієнта, адміністрування та поясненням прийнятих інженерних рішень.
+8.	Оформити звіт за результатами лабораторної роботи, додавши розділи: аналіз завдання, опис архітектури, специфікацію реалізованих функцій, UML-діаграми, текстовий опис програмної реалізації, результати тестування, висновки та додатки із фрагментами коду.
+9.	Завантажити звіт у форматі PDF на платформу dl.nure.ua та додати посилання на YouTube-відео в коментарях до роботи.
+ 
+3 ОПИС ВИКОНАНОЇ РОБОТИ
+3.1 Архітектура клієнтської частини
+Клієнтська частина системи спроєктована як односторінковий застосунок (Single Page Application, SPA). Такий підхід забезпечує високу швидкість відгуку інтерфейсу та плавний користувацький досвід, оскільки усуває необхідність повного перезавантаження сторінки під час переходів. Основою для розробки було обрано бібліотеку React у поєднанні з TypeScript для забезпечення типізації, що підвищує надійність та полегшує підтримку кодової бази на великих проєктах.
+Архітектуру можна представити у вигляді трьох основних логічних рівнів:
+1.	Рівень представлення (Presentation Layer). Цей рівень відповідає за візуалізацію даних та взаємодію з користувачем. Він складається з ієрархії React-компонентів. Компоненти поділено на дві категорії:
+o	Компоненти-сторінки (src/pages): представляють собою окремі екрани застосунку (DashboardPage, ThreatsHistoryPage, AdminPanelPage тощо). Вони відповідають за компонування UI-елементів та керування логікою, специфічною для даної сторінки.
+o	Перевикористовувані UI-компоненти (src/components): універсальні елементи інтерфейсу (кнопки, модальні вікна, графіки, таблиці), що використовуються на різних сторінках.
+Навігація між сторінками реалізована за допомогою бібліотеки React Router, яка дозволяє створювати декларативні та захищені маршрути.
+2.	Рівень бізнес-логіки (Business Logic Layer). Цей рівень інкапсулює логіку керування станом застосунку та обробку даних.
+o	Керування глобальним станом: Для зберігання даних про поточного користувача, його роль та статус аутентифікації використовується React Context API. Це дозволяє уникнути "прокидання" пропсів через багато рівнів компонентів.
+o	Кастомні хуки (src/hooks): Створено спеціальні хуки (наприклад, useAuth для доступу до контексту аутентифікації, useApi для уніфікованої роботи з API) для інкапсуляції та перевикористання логіки.
+3.	Рівень доступу до даних (Data Access Layer). Цей рівень забезпечує комунікацію з REST API серверної частини.
+o	HTTP-клієнт: Взаємодія з сервером реалізована за допомогою бібліотеки Axios. Створено єдиний екземпляр Axios з налаштованими інтерцепторами (перехоплювачами) для автоматичного додавання JWT-токена до заголовків запитів та централізованої обробки помилок (наприклад, автоматичне перенаправлення на сторінку входу при отриманні статусу 401 Unauthorized).
+o	Сервіси API (src/services): Логіка роботи з API згрупована у тематичні модулі (authService.ts, threatService.ts, adminService.ts), що робить код більш структурованим.
+3.2 Технологічний стек та інструменти
+Для реалізації клієнтської частини було обрано наступний набір технологій та бібліотек:
+•	React (v18.2.0): Основна бібліотека для побудови користувацьких інтерфейсів.
+•	TypeScript: Надає статичну типізацію, що зменшує кількість помилок на етапі розробки та покращує автодоповнення коду в IDE.
+•	React Router (v6): Забезпечує маршрутизацію в SPA.
+•	Axios: HTTP-клієнт для взаємодії з серверним API.
+•	Recharts: Бібліотека для створення інтерактивних та адаптивних графіків для візуалізації аналітичних даних.
+•	CSS Modules: Технологія для написання локальних CSS-стилів, що запобігає конфліктам імен класів у глобальному просторі.
+3.3 Реалізація функціонала для кінцевих користувачів
+Вебклієнт надає стандартним користувачам набір інструментів для моніторингу та керування особистими даними.
+Основний екран системи — Панель моніторингу (Dashboard). На ній у реальному часі (з періодичним оновленням через API) відображаються ключові показники з IoT-сенсорів: температура, вологість, рівень газу та наявність диму. Окремим блоком виводиться список останніх виявлених загроз з їхнім рівнем небезпеки та часом виявлення.
+Для перегляду історії створено сторінку "Архів сповіщень", де користувач може переглядати всі зафіксовані загрози, використовуючи фільтри за датою, типом загрози та рівнем небезпеки.
+На сторінці "Профіль користувача" реалізовано наступний функціонал:
+•	Зміна особистих даних: Користувач може оновити своє ім'я та контактний телефон.
+•	Зміна пароля: Передбачено захищену форму для зміни пароля з підтвердженням старого.
+•	Налаштування пріоритетних типів загроз: Користувач може обрати, сповіщення про які типи загроз (наприклад, "Пожежа", "Витік газу") є для нього найбільш пріоритетними. Ця інформація передається на сервер для налаштування персоналізованих сповіщень.
+•	Зміна параметрів геолокації: Реалізовано можливість вручну вказати або оновити свою геолокацію, що може використовуватись системою для точнішого інформування.
+На сторінці "Аналітика" користувачі можуть переглядати узагальнені статистичні дані. За допомогою бібліотеки Recharts реалізовано графіки, що демонструють:
+•	Кількість загроз кожного типу за останній місяць (стовпчикова діаграма).
+•	Розподіл загроз за рівнем небезпеки (кругова діаграма).
+3.4 Реалізація функціоналу адміністрування
+Для забезпечення гнучкого та безпечного керування системою було розроблено комплексний адміністративний розділ, доступ до якого суворо розмежовано на основі ролей. Клієнтська частина динамічно відображає відповідні інструменти залежно від прав поточного користувача, що запобігає несанкціонованому доступу до критичних функцій. Усі адміністративні дії реалізовані через взаємодію з захищеними кінцевими точками серверного API.
+Керування системою (для різних ролей)
+Сторінка "Керування системою" (/admin/system-control) є центральним хабом для адміністраторів, де динамічно відображаються панелі відповідно до ролі.
+1. Адміністратор інфраструктури (Infrastructure Admin)
+Ця роль орієнтована на технічну підтримку та забезпечення стабільної роботи системи. Через веб-інтерфейс йому надається доступ до наступних інструментів:
+•	Моніторинг працездатності серверів: Реалізовано віджет, який при завантаженні сторінки асинхронно запитує у сервера актуальний статус ключових системних сервісів (adminService.getSystemStatus()). Кожен сервіс відображається у списку з візуальним індикатором стану («online», «offline»), що дозволяє адміністратору швидко оцінити загальний стан інфраструктури.
+•	Резервне копіювання: Передбачено функціонал для ініціації створення повної резервної копії системи. Після натискання кнопки та підтвердження дії (window.confirm) клієнт надсилає запит на відповідну кінцеву точку API (adminService.createBackup()). Процес супроводжується блокуванням кнопки та відображенням статусу завантаження, а по завершенні користувач отримує сповіщення про результат.
+•	Відновлення системи з резервної копії: Реалізовано інтерфейс для завантаження файлу резервної копії (.backup, .zip, .sql). Після вибору файлу та отримання підтвердження від користувача про незворотність дії, файл передається на сервер за допомогою об'єкта FormData (adminService.restoreFromBackup()). Цей процес також блокує інтерфейс на час виконання для запобігання паралельним діям.
+2. Адміністратор бізнес-логіки (Business Logic Admin)
+Ця роль дозволяє гнучко налаштовувати ключові параметри алгоритмів класифікації загроз без необхідності втручання в код.
+•	Керування ваговими коефіцієнтами: Адміністратору надається форма для редагування вагових коефіцієнтів, що використовуються у формулі розрахунку рівня небезпеки для різних показників (температура, газ, дим, вологість). При завантаженні панелі поточні значення отримуються з сервера (adminService.getLogicSettings()). Зміни в полях форми оновлюють локальний стан компонента.
+•	Налаштування порогових значень: Друга частина форми дозволяє встановлювати конкретні порогові значення, при перевищенні яких система класифікує подію як певну загрозу (наприклад, поріг температури для загрози "Пожежа" або концентрація газу для "Витік газу").
+•	Збереження правил: Після внесення змін адміністратор може застосувати їх, натиснувши кнопку "Зберегти правила". Після підтвердження дії нові налаштування відправляються на сервер (adminService.updateLogicSettings()), де вони будуть застосовані для всіх наступних розрахунків.
+3. Адміністратор безпеки (Security Admin)
+Цей адміністратор відповідає за моніторинг інцидентів та відстеження дій у системі.
+•	Перегляд журналу аудиту: Для цієї ролі реалізовано панель "Аудит та безпека", де в табличному вигляді відображається журнал критичних подій. При завантаженні панелі клієнт запитує дані з API (adminService.getAuditLogs()). Журнал містить інформацію про час події, її ініціатора (актора), саму дію та деталі, що дозволяє відстежувати зміни ролей, спроби доступу та інші важливі операції.
+Керування користувачами (для Global Admin)
+Роль Global Admin є найбільш привілейованою і успадковує всі права інших адміністраторів, а також має ексклюзивний доступ до сторінки "Керування користувачами" (/admin/users).
+•	Перегляд та фільтрація списку користувачів: При завантаженні сторінки система отримує повний список користувачів (adminService.getAllUsers()) і відображає його у вигляді таблиці з основними даними: ім'я, email, роль та поточний статус.
+•	Активація/деактивація облікового запису: Навпроти кожного користувача розміщено кнопку для зміни його статусу. Натискання на неї ініціює запит до API (adminService.toggleUserStatus()). Для забезпечення кращого користувацького досвіду, стан оновлюється на клієнті оптимістично (не чекаючи повного перезавантаження сторінки), що робить інтерфейс швидким та відгукливим.
+•	Зміна ролі користувача: Реалізовано функціонал (через модальне вікно або випадаючий список), що дозволяє Глобальному адміністратору призначати користувачам інші ролі, включаючи підвищення до адміністраторів інших типів.
+3.5 Забезпечення безпеки на клієнтській частині
+Для захисту даних та розмежування доступу реалізовано наступні заходи:
+•	Зберігання JWT-токенів: Токени доступу зберігаються у localStorage, що дозволяє зберігати сесію користувача між перезавантаженнями сторінки.
+•	Захист маршрутів: Створено компонент-обгортку PrivateRoute, який перевіряє наявність та валідність токена, а також відповідність ролі користувача вимогам маршруту.
+•	Динамічне відображення UI: Елементи інтерфейсу, що відповідають за адміністративні дії, рендеряться умовно, лише якщо роль поточного користувача дозволяє виконувати ці дії.
+•	HTTPS: Уся комунікація з сервером відбувається виключно за захищеним протоколом HTTPS.
+4 ВИСНОВКИ
+У ході виконання лабораторної роботи було успішно спроєктовано та реалізовано клієнтську частину для «Системи сповіщення про небезпечну ситуацію». Розроблений веб-застосунок має сучасну архітектуру, що базується на React та TypeScript, та забезпечує повний набір функцій для моніторингу, керування та адміністрування системи.
+Основні результати роботи:
+1.	Створено гнучку та масштабовану архітектуру SPA, що дозволяє легко додавати новий функціонал.
+2.	Реалізовано надійну систему аутентифікації та авторизації з деталізованою рольовою моделлю, яка розмежовує доступ до функціонала на рівні інтерфейсу.
+3.	Розроблено інтуїтивно зрозумілі інтерфейси для кінцевих користувачів та комплексні панелі для чотирьох типів адміністраторів.
+4.	Впроваджено механізми захисту клієнтської частини, що забезпечують безпечне зберігання даних та взаємодію з сервером.
+Отримано практичний досвід у розробці складних веб-застосунків, застосуванні патернів проєктування, побудові захищених систем та роботі з сучасним технологічним стеком. Реалізований продукт повністю відповідає поставленим завданням та готовий до інтеграції з серверною частиною та подальшого розвитку.
+ 
+Додаток А
+ВІДЕОЗАПИС
+Відеозапис презентації результатів лабораторної роботи: 
+ 
+Додаток Б
+ГРАФІЧНІ МАТЕРІАЛИ
+ 
+Рисунок Б.1 — UML-діаграма прецедентів
+ 
+Рисунок Б.2 — UML-діаграма компонентів клієнтської частини
+ 
+Рисунок Б.3 - UML - діаграма діяльності
+ 
+Рисунок Б.4 - UML - діаграма станів 
+Додаток В
+ПРОГРАМНИЙ КОД
+В.1 Реалізація захищеного маршруту з перевіркою ролей
+Репозиторій: {URL_до_репозиторію}/src/components/PrivateRoute.tsx
+1   import React from 'react';
+2   import { Navigate, Outlet } from 'react-router-dom';
+3   import { useAuth } from '../hooks/useAuth';
+4   import { UserRole } from '../types';
+5   
+6   interface PrivateRouteProps {
+7     allowedRoles?: UserRole[];
+8   }
+9   
+10  export const PrivateRoute: React.FC<PrivateRouteProps> = ({ allowedRoles }) => {
+11    const { isAuthenticated, user } = useAuth();
+12  
+13    if (!isAuthenticated) {
+14      return <Navigate to="/login" replace />;
+15    }
+16  
+17    const hasRequiredRole = !allowedRoles || (user && allowedRoles.includes(user.role));
+18  
+19    if (!hasRequiredRole) {
+20      return <Navigate to="/unauthorized" replace />;
+21    }
+22  
+23    return <Outlet />;
+24  };
+В.2 Налаштування HTTP-клієнта Axios з інтерцепторами
+Репозиторій: {URL_до_репозиторію}/src/components/апи.tsx
+1   import axios from 'axios';
+2   
+3   const api = axios.create({
+4     baseURL: 'http://localhost:3000', 
+5   });
+6   
+7   // Інтерцептор для додавання токена в кожен запит
+8   api.interceptors.request.use(
+9     (config) => {
+10      const token = localStorage.getItem('token');
+11      if (token) {
+12        config.headers.Authorization = `Bearer ${token}`;
+13      }
+14      return config;
+15    },
+16    (error) => Promise.reject(error)
+17  );
+18  
+19  // Інтерцептор для обробки помилки 401 (не авторизований)
+20  api.interceptors.response.use(
+21    (response) => response,
+22    (error) => {
+23      if (error.response?.status === 401) {
+24        localStorage.removeItem('token');
+25        localStorage.removeItem('user');
+26        window.location.href = '/login'; 
+27      }
+28      return Promise.reject(error);
+29    }
+30  );
+31  
+32  export default api;
+
+В.3 Керування глобальним станом за допомогою React Context API
+Репозиторій: {URL_до_репозиторію}/src/components/апи.tsx
+
+1   import React, { createContext, useState, useEffect, ReactNode, useContext } from 'react';
+2   import { User, LoginCredentials } from '../types'; 
+3   import * as authService from '../api/authService';
+4   
+5   // 1. Описуємо тип даних
+6   interface AuthContextType {
+7     user: User | null;
+8     isAuthenticated: boolean;
+9     loading: boolean;
+10    login: (credentials: LoginCredentials) => Promise<void>;
+11    logout: () => void;
+12    updateUser: (newUserData: User) => void; 
+13  }
+14  
+15  // 2. Створюємо контекст
+16  export const AuthContext = createContext<AuthContextType | undefined>(undefined);
+17  
+18  // 3. Створюємо провайдер
+19  export const AuthProvider = ({ children }: { children: ReactNode }) => {
+20    const [user, setUser] = useState<User | null>(null);
+21    const [loading, setLoading] = useState(true);
+22  
+23    useEffect(() => {
+24      try {
+25        const storedUser = authService.getStoredUser();
+26        if (storedUser) {
+27          setUser(storedUser);
+28        }
+29      } catch (error) {
+30        console.error("Failed to initialize auth state:", error);
+31      } finally {
+32        setLoading(false);
+33      }
+34    }, []);
+35  
+36    const login = async (credentials: LoginCredentials) => {
+37      try {
+38        const loggedInUser = await authService.login(credentials);
+39        setUser(loggedInUser);
+40      } catch (error) {
+41        console.error("AuthContext: Login failed", error);
+42        throw error;
+43      }
+44    };
+45  
+46    const logout = () => {
+47      authService.logout();
+48      setUser(null);
+49    };
+50  
+51    const updateUser = (newUserData: User) => {
+52      setUser(newUserData);
+53      localStorage.setItem('user', JSON.stringify(newUserData));
+54    };
+55  
+56    // 4. Формуємо значення, яке буде доступне всім дочірнім компонентам
+57    const value = {
+58      user,
+59      isAuthenticated: !!user,
+60      loading,
+61      login,
+62      logout,
+63      updateUser, 
+64    };
+65  
+66    return (
+67      <AuthContext.Provider value={value}>
+68        {!loading && children}
+69      </AuthContext.Provider>
+70    );
+71  };
+72  
+73  export const useAuth = () => {
+74    const context = useContext(AuthContext);
+75    if (context === undefined) {
+76      throw new Error('useAuth must be used within an AuthProvider');
+77    }
+78    return context;
+79  };
+В.4 Реалізація функціоналу адміністрування з динамічним рендерингом Репозиторій: {URL_до_репозиторію}/src/components/апи.tsx
+1   import React, { useState, useEffect } from 'react';
+2   import { useAuth } from '../../hooks/useAuth';
+3   import * as adminService from '../../api/adminService';
+4   import LoadingSpinner from '../../components/common/LoadingSpinner';
+5   import { SystemStatus, LogicSettings, AuditLog } from '../../types';
+6   
+7   const SystemControlPage: React.FC = () => {
+8     const { user } = useAuth();
+9     const [loading, setLoading] = useState<boolean>(false);
+10    const [error, setError] = useState<string | null>(null);
+11  
+12    // =======================================================
+13    // Панель Адміністратора інфраструктури
+14    // =======================================================
+15    const InfrastructureAdminPanel = () => {
+16      const [systemStatus, setSystemStatus] = useState<SystemStatus[]>([]);
+17      const [backupLoading, setBackupLoading] = useState<boolean>(false);
+18  
+19      useEffect(() => {
+20        const fetchSystemStatus = async () => {
+21          try {
+22            setLoading(true);
+23            const status = await adminService.getSystemStatus();
+24            setSystemStatus(status);
+25          } catch (err) {
+26            setError('Не вдалося завантажити статус системи');
+27            console.error(err);
+28          } finally {
+29            setLoading(false);
+30          }
+31        };
+32  
+33        fetchSystemStatus();
+34      }, []);
+35  
+36      const handleBackup = async () => {
+37        if (window.confirm('Ви впевнені, що хочете створити резервну копію системи?')) {
+38          try {
+39            setBackupLoading(true);
+40            const response = await adminService.createBackup();
+41            alert(response.message);
+42          } catch (error) {
+43            alert('Не вдалося створити резервну копію.');
+44          } finally {
+45            setBackupLoading(false);
+46          }
+47        }
+48      };
+49  
+50      const handleRestore = async (e: React.ChangeEvent<HTMLInputElement>) => {
+51        const file = e.target.files?.[0];
+52        if (!file) return;
+53  
+54        if (window.confirm('Ви впевнені, що хочете відновити систему з цього файлу? Ця дія є незворотною.')) {
+55          try {
+56            setLoading(true);
+57            const formData = new FormData();
+58            formData.append('backup', file);
+59            const response = await adminService.restoreFromBackup(formData);
+60            alert(response.message);
+61          } catch (error) {
+62            alert('Не вдалося відновити систему з файлу.');
+63          } finally {
+64            setLoading(false);
+65          }
+66        }
+67      };
+68  
+69      return (
+70        <section className="admin-panel">
+71          <h2><i className="fas fa-server"></i> Керування інфраструктурою</h2>
+72          <div className="control-group">
+73            <h3>Моніторинг працездатності серверів</h3>
+74            {loading ? (
+75              <LoadingSpinner />
+76            ) : (
+77              <ul className="status-list">
+78                {systemStatus.map(service => (
+79                  <li key={service.name}>
+80                    {service.name}: <span className={`status-dot status-${service.status}`}>{service.status}</span>
+81                  </li>
+82                ))}
+83              </ul>
+84            )}
+85          </div>
+86          <div className="control-group">
+87            <h3>Резервне копіювання</h3>
+88            <p>Створення повної резервної копії бази даних та налаштувань.</p>
+89            <button 
+90              onClick={handleBackup} 
+91              className="action-button"
+92              disabled={backupLoading}
+93            >
+94              {backupLoading ? 'Створення...' : 'Створити резервну копію'}
+95            </button>
+96          </div>
+97          <div className="control-group">
+98            <h3>Відновлення системи</h3>
+99            <p>Відновлення системи з існуючої резервної копії. Ця дія є незворотною.</p>
+100           <input 
+101             type="file" 
+102             accept=".backup,.zip,.sql" 
+103             onChange={handleRestore}
+104             disabled={loading}
+105           />
+106           <button 
+107             className="action-button danger" 
+108             disabled={loading}
+109           >
+110             {loading ? 'Відновлення...' : 'Відновити з файлу'}
+111           </button>
+112         </div>
+113       </section>
+114     );
+115   };
+116 
+117   // =======================================================
+118   // Панель Адміністратора бізнес-логіки
+119   // =======================================================
+120   const BusinessLogicAdminPanel = () => {
+121     const [settings, setSettings] = useState<LogicSettings | null>(null);
+122     const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+123 
+124     useEffect(() => {
+125       const fetchSettings = async () => {
+126         try {
+127           setLoading(true);
+128           const data = await adminService.getLogicSettings();
+129           setSettings(data);
+130         } catch (err) {
+131           setError('Не вдалося завантажити налаштування логіки');
+132           console.error(err);
+133         } finally {
+134           setLoading(false);
+135         }
+136       };
+137 
+138       fetchSettings();
+139     }, []);
+140 
+141     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+142       const { name, value, dataset } = e.target;
+143       const category = dataset.category as keyof LogicSettings;
+144       if (category && settings) {
+145         setSettings({
+146           ...settings,
+147           [category]: { 
+148             ...settings[category], 
+149             [name]: parseFloat(value) 
+150           }
+151         });
+152       }
+153     };
+154     
+155     const handleSubmit = async (e: React.FormEvent) => {
+156       e.preventDefault();
+157       if (!settings) return;
+158 
+159       if (window.confirm('Оновити правила бізнес-логіки?')) {
+160         try {
+161           setIsSubmitting(true);
+162           await adminService.updateLogicSettings(settings);
+163           alert('Правила успішно оновлено.');
+164         } catch (error) {
+165           alert('Не вдалося оновити правила.');
+166         } finally {
+167           setIsSubmitting(false);
+168         }
+169       }
+170     };
+171 
+172     if (loading) return <LoadingSpinner />;
+173     if (!settings) return <div>Не вдалося завантажити налаштування</div>;
+174 
+175     return (
+176       <section className="admin-panel">
+177         <h2><i className="fas fa-cogs"></i> Керування бізнес-логікою</h2>
+178         <form onSubmit={handleSubmit}>
+179           <div className="control-group">
+180             <h3>Вагові коефіцієнти загроз</h3>
+181             <div className="form-grid">
+182               <label>Температура:</label>
+183               <input 
+184                 type="number" 
+185                 name="temperature" 
+186                 data-category="weights" 
+187                 value={settings.weights.temperature} 
+188                 onChange={handleChange} 
+189                 step="0.01" 
+190                 min="0"
+191                 max="1"
+192               />
+193               <label>Газ:</label>
+194               <input 
+195                 type="number" 
+196                 name="gas" 
+197                 data-category="weights" 
+198                 value={settings.weights.gas} 
+199                 onChange={handleChange} 
+200                 step="0.01" 
+201                 min="0"
+202                 max="1"
+203               />
+204               <label>Дим:</label>
+205               <input 
+206                 type="number" 
+207                 name="smoke" 
+208                 data-category="weights" 
+209                 value={settings.weights.smoke} 
+210                 onChange={handleChange} 
+211                 step="0.01" 
+212                 min="0"
+213                 max="1"
+214               />
+215               <label>Вологість:</label>
+216               <input 
+217                 type="number" 
+218                 name="humidity" 
+219                 data-category="weights" 
+220                 value={settings.weights.humidity} 
+221                 onChange={handleChange} 
+222                 step="0.01" 
+223                 min="0"
+224                 max="1"
+225               />
+226             </div>
+227           </div>
+228           <div className="control-group">
+229             <h3>Порогові значення для класифікації загроз</h3>
+230             <div className="form-grid">
+231               <label>"Пожежа" (°C):</label>
+232               <input 
+233                 type="number" 
+234                 name="fire_temp" 
+235                 data-category="thresholds" 
+236                 value={settings.thresholds.fire_temp} 
+237                 onChange={handleChange} 
+238                 min="0"
+239               />
+240               <label>"Витік газу" (ppm):</label>
+241               <input 
+242                 type="number" 
+243                 name="gas_leak_ppm" 
+244                 data-category="thresholds" 
+245                 value={settings.thresholds.gas_leak_ppm} 
+246                 onChange={handleChange} 
+247                 min="0"
+248               />
+249               <label>"Перегрів" (°C):</label>
+250               <input 
+251                 type="number" 
+252                 name="overheating_temp" 
+253                 data-category="thresholds" 
+254                 value={settings.thresholds.overheating_temp} 
+255                 onChange={handleChange} 
+256                 min="0"
+257               />
+258             </div>
+259           </div>
+260           <button 
+261             type="submit" 
+262             className="action-button"
+263             disabled={isSubmitting}
+264           >
+265             {isSubmitting ? 'Збереження...' : 'Зберегти правила'}
+266           </button>
+267         </form>
+268       </section>
+269     );
+270   };
+271 
+272   // =======================================================
+273   // Панель Адміністратора безпеки
+274   // =======================================================
+275   const SecurityAdminPanel = () => {
+276     const [logs, setLogs] = useState<AuditLog[]>([]);
+277     const [logsLoading, setLogsLoading] = useState<boolean>(false);
+278     
+279     useEffect(() => {
+280       const fetchAuditLogs = async () => {
+281         try {
+282           setLogsLoading(true);
+283           const data = await adminService.getAuditLogs();
+284           setLogs(data);
+285         } catch (err) {
+286           setError('Не вдалося завантажити журнал аудиту');
+287           console.error(err);
+288         } finally {
+289           setLogsLoading(false);
+290         }
+291       };
+292 
+293       fetchAuditLogs();
+294     }, []);
+295 
+296     return (
+297       <section className="admin-panel">
+298         <h2><i className="fas fa-shield-alt"></i> Аудит та безпека</h2>
+299         <div className="control-group">
+300           <h3>Журнал аудиту</h3>
+301           {logsLoading ? (
+302             <LoadingSpinner />
+303           ) : error ? (
+304             <p className="error-message">{error}</p>
+305           ) : (
+306             <div className="audit-log-table">
+307               <table>
+308                 <thead>
+309                   <tr>
+310                     <th>Час</th>
+311                     <th>Актор</th>
+312                     <th>Дія</th>
+313                     <th>Деталі</th>
+314                   </tr>
+315                 </thead>
+316                 <tbody>
+317                   {logs.map(log => (
+318                     <tr key={log.id}>
+319                       <td>{new Date(log.timestamp).toLocaleString()}</td>
+320                       <td>{log.actor}</td>
+321                       <td>{log.action}</td>
+322                       <td>{log.details}</td>
+323                     </tr>
+324                   ))}
+325                 </tbody>
+326               </table>
+327             </div>
+328           )}
+329         </div>
+330       </section>
+331     );
+332   };
+333   
+334   // =======================================================
+335   // Головний компонент, що рендерить панелі відповідно до ролі
+336   // =======================================================
+337   return (
+338     <div className="system-control-page">
+339       <h1>Керування системою</h1>
+340       
+341       {error && <div className="error-message">{error}</div>}
+342       
+343       {(user?.role === 'Infrastructure Admin' || user?.role === 'Global Admin') && <InfrastructureAdminPanel />}
+344       
+345       {(user?.role === 'Business Logic Admin' || user?.role === 'Global Admin') && <BusinessLogicAdminPanel />}
+346       
+347       {(user?.role === 'Security Admin' || user?.role === 'Global Admin') && <SecurityAdminPanel />}
+348 
+349       {user && !['Infrastructure Admin', 'Business Logic Admin', 'Security Admin', 'Global Admin'].includes(user.role) && (
+350         <p>У вас немає доступу до цього розділу.</p>
+351       )}
+352     </div>
+353   );
+354 };
+355 
+356 export default SystemControlPage;;
+
+
