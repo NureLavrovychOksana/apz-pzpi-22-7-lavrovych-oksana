@@ -114,7 +114,7 @@ o	Налаштування профілю користувача, зокрема
 Додаток В
 ПРОГРАМНИЙ КОД
 В.1 Отримання даних та керування станом екрану (MVVM)
-Репозиторій: https://github.comNureLavrovychOksana/apz-pzpi-22-7-lavrovych-oksana/blob/main/app/src/main/java/com/example/safezonetracker/ui/screens/dashboard/DashboardViewModel.kt
+Репозиторій: https://github.com/NureLavrovychOksana/apz-pzpi-22-7-lavrovych-oksana/blob/main/Lab4/pzpi-22-7-lavrovych-oksana-lab4/safezonetracker/ui/screens/dashboard/DashboardViewModel.kt
 1  package com.example.safezonetracker.ui.screens.dashboard
  2
  3  import androidx.lifecycle.ViewModel
@@ -163,7 +163,8 @@ o	Налаштування профілю користувача, зокрема
 46      }
 47  }
 В.2 Взаємодія з віддаленим API (Retrofit)
-Репозиторій: https://github.com/{your_username}/{your_repo}/blob/main/app/src/main/java/com/example/safezonetracker/data/remote/SafeZoneApi.kt
+Репозиторій:https://github.com/NureLavrovychOksana/apz-pzpi-22-7-lavrovych-oksana/blob/main/Lab4/pzpi-22-7-lavrovych-oksana-lab4/safezonetracker/data/remote/SafeZoneApi.kt
+
 1  package com.example.safezonetracker.data.remote
  2
  3  import com.example.safezonetracker.data.remote.models.*
@@ -253,8 +254,10 @@ o	Налаштування профілю користувача, зокрема
 87          @Path("id") userId: Int
 88      ): Response<Map<String, String>>
 89  }
+
 В.3 Централізований доступ до даних (Repository Pattern)
-Репозиторій: https://github.com/{your_username}/{your_repo}/blob/main/app/src/main/java/com/example/safezonetracker/data/repository/AppRepository.kt
+Репозиторій: https://github.com/NureLavrovychOksana/apz-pzpi-22-7-lavrovych-oksana/blob/main/Lab4/pzpi-22-7-lavrovych-oksana-lab4/safezonetracker/data/repository.kt
+
 1  package com.example.safezonetracker.data.repository
  2
  3  import com.example.safezonetracker.data.local.UserPreferences
@@ -360,8 +363,10 @@ o	Налаштування профілю користувача, зокрема
 103          return mapLogicSettingsDtoToModel(handleApiResponse(response))
 104      }
 105 }
+
 В.4 Обробка Push-сповіщень у фоновому режимі
-Репозиторій: https://github.com/{your_username}/{your_repo}/blob/main/app/src/main/java/com/example/safezonetracker/services/PushNotificationService.kt
+Репозиторій: https://github.com/NureLavrovychOksana/apz-pzpi-22-7-lavrovych-oksana/blob/main/Lab4/pzpi-22-7-lavrovych-oksana-lab4/safezonetracker/services/PushNotificationService.kt
+
 1  package com.example.safezonetracker.services
  2
  3  import android.app.NotificationChannel
